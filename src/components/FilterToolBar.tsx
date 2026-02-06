@@ -14,7 +14,7 @@ export default function FilterToolBar({
 }) {
   const controlBase =
     "ml-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const inputBase = `${controlBase} w-56 placeholder:text-slate-400`;
+  const inputBase = `${controlBase} w-72 placeholder:text-slate-400`;
 
   return (
     <>
