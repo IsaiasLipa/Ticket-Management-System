@@ -23,13 +23,13 @@ function filterTicekts(tickets: Ticket[], filters: FilterObject): Ticket[] {
         item.ai_response
           .toLocaleLowerCase()
           .includes(filters.searchString.toLocaleLowerCase()) ||
-        item.tags.some((word) =>
-          word.includes(filters.searchString.toLocaleLowerCase()) ||
-        item.category.includes(filters.searchString.toLocaleLowerCase()) ||
-        item.status.includes(filters.searchString.toLocaleLowerCase()) ||
-        item.priority.includes(filters.searchString.toLocaleLowerCase())
+        item.tags.some(
+          (word) =>
+            word.includes(filters.searchString.toLocaleLowerCase()) ||
+            item.category.includes(filters.searchString.toLocaleLowerCase()) ||
+            item.status.includes(filters.searchString.toLocaleLowerCase()) ||
+            item.priority.includes(filters.searchString.toLocaleLowerCase()),
         )),
-         
   );
 
   return filtered;

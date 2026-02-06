@@ -1,13 +1,7 @@
-import { ticketStatusOptions } from "../types/types";
+import { STATUS_OPTIONS, priorityStyles } from "../constants/constants";
 import type { Ticket } from "../types/types";
 
 export default function TicketRow({ ticket }: { ticket: Ticket }) {
-  const priorityStyles: Record<Ticket["priority"], string> = {
-    low: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    medium: "border-sky-200 bg-sky-50 text-sky-700",
-    high: "border-orange-200 bg-orange-50 text-orange-700",
-    urgent: "border-rose-200 bg-rose-50 text-rose-700",
-  };
   const cellBase = "px-4 py-3";
 
   return (
@@ -24,7 +18,7 @@ export default function TicketRow({ ticket }: { ticket: Ticket }) {
           defaultValue={ticket.status}
           aria-label="Ticket status"
         >
-          {ticketStatusOptions.map((status) => (
+          {STATUS_OPTIONS.map((status) => (
             <option key={status} value={status}>
               {status}
             </option>

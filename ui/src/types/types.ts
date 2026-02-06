@@ -1,12 +1,7 @@
-export const ticketStatusOptions = [
-  "open",
-  "in_progress",
-  "blocked",
-  "resolved",
-  "closed",
-] as const;
-export type TicketStatus = (typeof ticketStatusOptions)[number];
-export type TicketPriority = "low" | "medium" | "high" | "urgent";
+import type { PRIORITY_OPTIONS, STATUS_OPTIONS } from "../constants/constants";
+
+export type TicketStatus = (typeof STATUS_OPTIONS)[number] | "";
+export type TicketPriority = (typeof PRIORITY_OPTIONS)[number] | "";
 
 export type Ticket = {
   id: string;
@@ -16,6 +11,8 @@ export type Ticket = {
   category: string;
   tags: string[];
   priority: TicketPriority;
+  email: string;
+  department: string;
   ai_response: string;
 };
 
