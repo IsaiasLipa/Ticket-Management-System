@@ -42,7 +42,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
                 return { ...prev, description: e.target.value };
               })
             }
-            className={`${inputBase} min-h-[120px]`}
+            className={`${inputBase} min-h-30`}
           />
         </label>
         <label className="text-sm font-medium text-slate-700">
