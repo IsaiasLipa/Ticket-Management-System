@@ -103,7 +103,9 @@ AI suggestions are **mocked** in the backend. The endpoint `POST /ticket/suggest
 - AI suggestions are mocked; no real model integration.
 - Tags are stored as JSON strings in SQLite (not normalized).
 - Polling can become inefficient at scale (WebSockets/SSE would be better).
+- Pagination should be added after a certain number of tickets are found in the database.
 - The modal form can grow long; it is scrollable but still a single-page form.
+- A modal for editing existing tickets can be added as next steps.
 
 
 - Screen recording of functioning app included 
