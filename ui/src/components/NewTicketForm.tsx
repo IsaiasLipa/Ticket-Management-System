@@ -30,7 +30,6 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
 
   const [isAiSuggestionLoading, setIsAiSuggestionLoading] = useState(false);
   const [aiError, setAiError] = useState(false);
-
   const getSuggestedAiResponse = async () => {
     try {
       setIsAiSuggestionLoading(true);

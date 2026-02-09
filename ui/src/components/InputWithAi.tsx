@@ -3,6 +3,7 @@ import type { Ticket, TicketPriority } from "../types/types";
 
 export default function InputWithAi({
   children,
+  isAiSuggesting,
 isAiSuggestionLoading,
   previousAiFields,
   field,
@@ -10,6 +11,7 @@ isAiSuggestionLoading,
   setPreviousAiFields,
 }: {
   children: JSX.Element;
+  isAiSuggesting: boolean;
   isAiSuggestionLoading: boolean;
   previousAiFields: {
     priority: TicketPriority;
@@ -26,6 +28,7 @@ isAiSuggestionLoading,
     }>
   >;
 }) {
+
   console.log(`previous ${field}`, previousAiFields[field]);
   return (
     <div>
