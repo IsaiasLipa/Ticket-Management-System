@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PRIORITY_OPTIONS } from "../constants/constants";
+import { PRIORITY_OPTIONS, CATEGORY_OPTIONS } from "../constants/constants";
 import newTicketApi from "../services/getAiSuggestion";
 import type { Ticket, TicketPriority } from "../types/types";
 import createTicket from "../services/createTicket";
@@ -25,6 +25,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
 
   const [isAiSuggestionLoading, setIsAiSuggestionLoading] = useState(false);
   const [aiError, setAiError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const inputBase =
     "mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500";
@@ -86,8 +87,13 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
   };
 
   const submitNewTicket = async () => {
-    await createTicket(newTicket);
-    onClose();
+    try {
+      setIsSubmitting(true);
+      await createTicket(newTicket);
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -235,8 +241,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
               suggestion={aiSuggestions?.category}
               {...createAiHandlers("category")}
             >
-              <input
-                placeholder="Networking"
+              <select
                 value={newTicket.category}
                 onChange={(e) =>
                   setNewTicket((prev) => {
@@ -244,7 +249,14 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
                   })
                 }
                 className={inputBase}
-              />
+              >
+                <option value="">Select</option>
+                {CATEGORY_OPTIONS.map((item, index) => (
+                  <option key={index} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
             </InputWithAi>
           </label>
         </div>
@@ -272,12 +284,14 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
         </button>
         <button
           onClick={() => submitNewTicket()}
-          disabled={isSubmitDisabled}
+          disabled={isSubmitDisabled || isSubmitting}
           className={`${buttonBase} focus:ring-blue-500 ${
-            isSubmitDisabled ? "cursor-not-allowed bg-slate-300" : buttonPrimary
+            isSubmitDisabled || isSubmitting
+              ? "cursor-not-allowed bg-slate-300"
+              : buttonPrimary
           }`}
         >
-          Submit
+          {isSubmitting ? "Submitting..." : "Submit"}
         </button>
       </div>
     </div>

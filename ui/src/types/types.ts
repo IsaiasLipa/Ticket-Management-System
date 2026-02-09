@@ -1,14 +1,19 @@
-import type { PRIORITY_OPTIONS, STATUS_OPTIONS } from "../constants/constants";
+import {
+  CATEGORY_OPTIONS,
+  type PRIORITY_OPTIONS,
+  type STATUS_OPTIONS,
+} from "../constants/constants";
 
 export type TicketStatus = (typeof STATUS_OPTIONS)[number] | "";
 export type TicketPriority = (typeof PRIORITY_OPTIONS)[number] | "";
+export type TicketCategory = (typeof CATEGORY_OPTIONS)[number] | "";
 
 export type Ticket = {
   id: string;
   title: string;
   description: string;
   status: TicketStatus;
-  category: string;
+  category: TicketCategory;
   tags: string[];
   priority: TicketPriority;
   email: string;

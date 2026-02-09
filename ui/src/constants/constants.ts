@@ -16,7 +16,7 @@ export const CATEGORY_OPTIONS = [
   "Infrastructure",
   "Enhancement",
   "Design",
-];
+] as const;
 
 export const TABLE_HEADERS = [
   "Title",

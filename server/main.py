@@ -66,7 +66,7 @@ def suggest_ticket(request: TicketRequest):
 
     responses = [
         {
-            "category": "Networking",
+            "category": "Infrastructure",
             "tags": ["VPN", "timeout", "remote access"],
             "priority": "High",
             "suggested_response": (
@@ -75,7 +75,7 @@ def suggest_ticket(request: TicketRequest):
             ),
         },
         {
-            "category": "Authentication",
+            "category": "Bug",
             "tags": ["login", "credentials", "auth"],
             "priority": "High",
             "suggested_response": (
@@ -84,7 +84,7 @@ def suggest_ticket(request: TicketRequest):
             ),
         },
         {
-            "category": "Email",
+            "category": "Feature",
             "tags": ["email", "notifications", "delayed"],
             "priority": "Medium",
             "suggested_response": (
@@ -93,7 +93,7 @@ def suggest_ticket(request: TicketRequest):
             ),
         },
         {
-            "category": "Performance",
+            "category": "Infrastructure",
             "tags": ["slow", "timeout", "latency"],
             "priority": "Medium",
             "suggested_response": (
@@ -102,7 +102,7 @@ def suggest_ticket(request: TicketRequest):
             ),
         },
         {
-            "category": "Mobile",
+            "category": "Enhancement",
             "tags": ["mobile", "ios", "android"],
             "priority": "Low",
             "suggested_response": (
@@ -111,7 +111,7 @@ def suggest_ticket(request: TicketRequest):
             ),
         },
         {
-            "category": "UI/UX",
+            "category": "Design",
             "tags": ["ui", "layout", "display"],
             "priority": "Low",
             "suggested_response": (
