@@ -126,7 +126,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
             className={`${inputBase} min-h-30`}
           />
         </label> 
-        // Ai suggestion button only visible when title and description defined
+        {/* Ai suggestion button only visible when title and description defined */}
         {newTicket.title && newTicket.description && (
           <div className="flex justify-end">
             <button
@@ -145,7 +145,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         )}
-        // Error message for failed Ai suggestion call
+        {/* Error message for failed Ai suggestion call */}
         {aiError && (
           <span className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
             Ai suggestions failed to load. Please try again.
