@@ -10,6 +10,7 @@ import ToastMessages from "./ToastMessages";
 import useTicketStatusUpdate from "../hooks/useTicketStatusUpdate";
 
 function filterTicekts(tickets: Ticket[], filters: FilterObject): Ticket[] {
+  // Apply filters and search with AND semantics (case-insensitive).
   const search = filters.searchString.trim().toLowerCase();
   const categoryFilter = filters.categoryFilter.toLowerCase();
   const statusFilter = filters.statusFilter.toLowerCase();

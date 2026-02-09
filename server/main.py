@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from db import get_db
 import json
+import random
 from uuid import uuid4
 import time
 
@@ -56,20 +57,94 @@ class TicketUpdate(BaseModel):
     department: Optional[str] = None
     ai_response: Optional[str] = None
 
-## TODO: should this be a post or get 
+## Mock AI suggestions
 @app.post("/ticket/suggest", response_model=TicketSuggestion)
-def suggest_ticket(_: TicketRequest):
-    ## artificial delay
+def suggest_ticket(request: TicketRequest):
+    # artificial delay
     time.sleep(1)
-    return {
-        "category": "Networking",
-        "tags": ["VPN", "timeout", "remote access"],
-        "priority": "High",
-        "suggested_response": (
-            "Please ensure you're on the company network and restart your VPN client. "
-            "If that fails, contact IT Support at x1234."
-        ),
+    text = f"{request.title} {request.description}".lower()
+
+    responses = [
+        {
+            "category": "Networking",
+            "tags": ["VPN", "timeout", "remote access"],
+            "priority": "High",
+            "suggested_response": (
+                "Please ensure you're on the company network and restart your VPN client. "
+                "If that fails, contact IT Support at x1234."
+            ),
+        },
+        {
+            "category": "Authentication",
+            "tags": ["login", "credentials", "auth"],
+            "priority": "High",
+            "suggested_response": (
+                "Please reset your password and try again. If the issue persists, "
+                "clear your browser cache and contact IT Support."
+            ),
+        },
+        {
+            "category": "Email",
+            "tags": ["email", "notifications", "delayed"],
+            "priority": "Medium",
+            "suggested_response": (
+                "We are investigating delayed mail delivery. In the meantime, "
+                "check your spam folder and ensure your inbox is not full."
+            ),
+        },
+        {
+            "category": "Performance",
+            "tags": ["slow", "timeout", "latency"],
+            "priority": "Medium",
+            "suggested_response": (
+                "Performance may be impacted by peak usage. Please retry in a few minutes "
+                "and report if the issue continues."
+            ),
+        },
+        {
+            "category": "Mobile",
+            "tags": ["mobile", "ios", "android"],
+            "priority": "Low",
+            "suggested_response": (
+                "Please update the app to the latest version and retry. "
+                "If the issue persists, reinstall the app."
+            ),
+        },
+        {
+            "category": "UI/UX",
+            "tags": ["ui", "layout", "display"],
+            "priority": "Low",
+            "suggested_response": (
+                "Thanks for the feedback. We will review the layout and follow up with "
+                "improvements in a future release."
+            ),
+        },
+    ]
+
+    keyword_map = {
+        "vpn": 0,
+        "network": 0,
+        "login": 1,
+        "password": 1,
+        "auth": 1,
+        "email": 2,
+        "notification": 2,
+        "slow": 3,
+        "timeout": 3,
+        "latency": 3,
+        "mobile": 4,
+        "ios": 4,
+        "android": 4,
+        "ui": 5,
+        "layout": 5,
+        "display": 5,
     }
+
+    for keyword, index in keyword_map.items():
+        if keyword in text:
+            return responses[index]
+
+    return random.choice(responses)
 
 @app.post("/ticket")
 def write_ticket_to_db(payload: TicketPayload):
@@ -174,4 +249,3 @@ def get_tickets():
         item["tags"] = json.loads(item["tags"])  # converts string -> list
         tickets.append(item)
     return tickets
-

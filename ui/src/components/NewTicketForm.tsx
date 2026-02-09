@@ -41,6 +41,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
     !newTicket.email.trim() ||
     !newTicket.department.trim();
 
+  // Helper to accept/reject a single AI suggestion field.
   function createAiHandlers<K extends keyof Ticket>(field: K) {
     return {
       onAccept: (value: Ticket[K]) => {
@@ -62,6 +63,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
     };
   }
 
+  //Get ai suggestions
   const getSuggestedAiResponse = async () => {
     try {
       setIsAiSuggestionLoading(true);
@@ -123,7 +125,8 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
             required
             className={`${inputBase} min-h-30`}
           />
-        </label>
+        </label> 
+        // Ai suggestion button only visible when title and description defined
         {newTicket.title && newTicket.description && (
           <div className="flex justify-end">
             <button
@@ -142,6 +145,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         )}
+        // Error message for failed Ai suggestion call
         {aiError && (
           <span className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
             Ai suggestions failed to load. Please try again.

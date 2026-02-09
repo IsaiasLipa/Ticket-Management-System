@@ -11,6 +11,7 @@ export default function useTicketStatusUpdate(
 
   const handleTicketStatusChange = useCallback(
     async (ticketId: string, nextStatus: TicketStatus) => {
+      // Optimistically update the UI, then rollback if the API call fails.
       const previousStatus =
         tickets.find((t) => t.id === ticketId)?.status ?? nextStatus;
 
@@ -30,6 +31,7 @@ export default function useTicketStatusUpdate(
             t.id === ticketId ? { ...t, status: previousStatus } : t,
           ),
         );
+        // Ticket state update errors get a toast message as well
         setToastMessages((prev) => [
           ...prev,
           {
