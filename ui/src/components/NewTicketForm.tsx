@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PRIORITY_OPTIONS, CATEGORY_OPTIONS } from "../constants/constants";
 import newTicketApi from "../services/getAiSuggestion";
-import type { Ticket, TicketPriority } from "../types/types";
+import type { Ticket, TicketCategory, TicketPriority } from "../types/types";
 import createTicket from "../services/createTicket";
 import InputWithAi from "./InputWithAi";
 
@@ -245,7 +245,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
                 value={newTicket.category}
                 onChange={(e) =>
                   setNewTicket((prev) => {
-                    return { ...prev, category: e.target.value };
+                    return { ...prev, category: e.target.value as TicketCategory };
                   })
                 }
                 className={inputBase}
