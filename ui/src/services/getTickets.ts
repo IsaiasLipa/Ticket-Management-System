@@ -3,7 +3,7 @@ export default async function getTickets() {
     const response = await fetch("http://localhost:8000/tickets");
 
     if (!response.ok) {
-      throw new Error("Can not fetch ticekts");
+      throw new Error("Can not fetch tickets");
     }
     const data = await response.json();
     return data;

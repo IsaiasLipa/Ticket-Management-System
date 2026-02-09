@@ -1,73 +1,66 @@
-# React + TypeScript + Vite
+# Ticket Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple ticket management app with a React + Vite UI and a FastAPI + SQLite backend. It supports ticket creation, filtering/searching, status updates with optimistic UI, and AI suggestion helpers.
 
-Currently, two official plugins are available:
+**Features**
+- View and search tickets with filters (category, status, priority)
+- Optimistic status updates with toast feedback
+- Create tickets in a modal
+- AI suggestion helper for category, tags, and priority
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Tech Stack**
+- UI: React, TypeScript, Vite, Tailwind CSS
+- API: FastAPI
+- DB: SQLite
 
-## React Compiler
+**Project Structure**
+- `ui/` Frontend app
+- `server/` FastAPI backend
+- `server/data/` SQLite database files
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Getting Started**
+1. Start the API
+2. `cd server`
+3. `python -m venv .venv`
+4. `source .venv/bin/activate`
+5. `pip install fastapi uvicorn`
+6. `uvicorn main:app --reload --port 8000`
 
-## Expanding the ESLint configuration
+1. Start the UI
+2. `cd ui`
+3. `npm install`
+4. `npm run dev`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Database**
+The API expects the SQLite database at `server/data/tickets.db` (set in `server/db.py`).
 
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+Create the schema:
+```sql
+CREATE TABLE tickets (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  status TEXT NOT NULL,
+  category TEXT NOT NULL,
+  tags TEXT NOT NULL,
+  priority TEXT NOT NULL,
+  email TEXT NOT NULL,
+  department TEXT NOT NULL,
+  ai_response TEXT NOT NULL
+);
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Note: `tags` is stored as a JSON string.
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+**API Endpoints**
+- `GET /tickets` Get all tickets
+- `POST /ticket` Create a ticket
+- `PUT /ticket/{ticket_id}` Update a ticket
+- `POST /ticket/suggest` Get AI suggestions
 
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+**UI Scripts**
+- `npm run dev`
+- `npm run build`
+- `npm run lint`
+- `npm run format`
+- `npm run preview`

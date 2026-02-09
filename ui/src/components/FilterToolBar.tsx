@@ -23,7 +23,7 @@ export default function FilterToolBar({
           Search:{" "}
           <input
             type="text"
-            placeholder="e.g Title, Description, Tag..."
+            placeholder="e.g Title, Description, Tag, Email..."
             value={filters.searchString}
             onChange={(e) =>
               setFilters((prev) => {

@@ -59,8 +59,8 @@ class TicketUpdate(BaseModel):
 ## TODO: should this be a post or get 
 @app.post("/ticket/suggest", response_model=TicketSuggestion)
 def suggest_ticket(_: TicketRequest):
+    ## artificial delay
     time.sleep(1)
-    ##raise HTTPException(status_code=500, detail="AI failed at making suggestions")
     return {
         "category": "Networking",
         "tags": ["VPN", "timeout", "remote access"],
@@ -107,6 +107,7 @@ def write_ticket_to_db(payload: TicketPayload):
         ),
     )
     conn.commit()
+    ## artificial delay
     time.sleep(0.8)
     cursor.execute("SELECT * FROM tickets WHERE id = ?", (ticket_id,))
     row = cursor.fetchone()
@@ -125,7 +126,7 @@ def update_ticket(ticket_id: str, payload: TicketUpdate):
     updates = payload.model_dump(exclude_unset=True)
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
-
+    ## artificial delay
     time.sleep(0.8)
 
     if "tags" in updates and updates["tags"] is not None:

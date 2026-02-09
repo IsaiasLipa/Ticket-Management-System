@@ -23,7 +23,7 @@ export type FilterObject = {
   priorityFilter: string;
 };
 
-export type AiSuggestion = Pick<
-  Ticket,
-  "priority" | "tags" | "category" | "ai_response"
->;
+export type ToastMessage = {
+  type: "success" | "error";
+  message: string;
+};

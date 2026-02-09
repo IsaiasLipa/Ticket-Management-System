@@ -19,29 +19,60 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
     ai_response: "",
   });
 
+  const [aiSuggestions, setAiSuggestions] = useState<Partial<Ticket> | null>(
+    null,
+  );
+
+  const [isAiSuggestionLoading, setIsAiSuggestionLoading] = useState(false);
+  const [aiError, setAiError] = useState(false);
 
   const inputBase =
     "mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const labelBase = "text-sm font-medium text-slate-700";
+  const buttonBase =
+    "rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-offset-2";
+  const buttonSecondary =
+    "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50";
+  const buttonPrimary = "bg-blue-600 text-white hover:bg-blue-700";
+
   const isSubmitDisabled =
     !newTicket.title.trim() ||
     !newTicket.description.trim() ||
     !newTicket.email.trim() ||
     !newTicket.department.trim();
 
-  const [isAiSuggestionLoading, setIsAiSuggestionLoading] = useState(false);
-  const [aiError, setAiError] = useState(false);
+  function createAiHandlers<K extends keyof Ticket>(field: K) {
+    return {
+      onAccept: (value: Ticket[K]) => {
+        setNewTicket((prev) => ({
+          ...prev,
+          [field]: value,
+        }));
+
+        setAiSuggestions((prev) =>
+          prev ? { ...prev, [field]: undefined } : null,
+        );
+      },
+
+      onReject: () => {
+        setAiSuggestions((prev) =>
+          prev ? { ...prev, [field]: undefined } : null,
+        );
+      },
+    };
+  }
+
   const getSuggestedAiResponse = async () => {
     try {
       setIsAiSuggestionLoading(true);
       const data = await newTicketApi(newTicket);
+      setAiSuggestions({
+        category: data.category,
+        tags: data.tags,
+        priority: data.priority,
+      });
       setNewTicket((prev) => {
-        return {
-          ...prev,
-          category: data.category,
-          tags: data.tags,
-          priority: data.priority,
-          ai_response: data.suggested_response,
-        };
+        return { ...prev, ai_response: data.suggested_response };
       });
       setAiError(false);
     } catch (e) {
@@ -58,14 +89,14 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-h-[85vh] space-y-6 overflow-y-auto p-2 pr-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-900">
           Create new Ticket
         </h2>
       </div>
       <div className="grid gap-4">
-        <label className="text-sm font-medium text-slate-700">
+        <label className={labelBase}>
           Title
           <input
             placeholder="Ticket title"
@@ -79,7 +110,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
             className={inputBase}
           />
         </label>
-        <label className="text-sm font-medium text-slate-700">
+        <label className={labelBase}>
           Description
           <textarea
             placeholder="Describe the issue"
@@ -116,7 +147,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
             Ai suggestions failed to load. Please try again.
           </span>
         )}
-        <label className="text-sm font-medium text-slate-700">
+        <label className={labelBase}>
           Email
           <input
             type="email"
@@ -133,9 +164,12 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
         </label>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="text-sm font-medium text-slate-700">
+          <label className={labelBase}>
             Priority (optional)
-
+            <InputWithAi
+              suggestion={aiSuggestions?.priority}
+              {...createAiHandlers("priority")}
+            >
               <select
                 value={newTicket.priority}
                 onChange={(e) =>
@@ -155,9 +189,9 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
                   </option>
                 ))}
               </select>
-
+            </InputWithAi>
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className={labelBase}>
             Department
             <input
               placeholder="Support"
@@ -171,9 +205,12 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
               className={inputBase}
             />
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className={labelBase}>
             Tags
-
+            <InputWithAi
+              suggestion={aiSuggestions?.tags}
+              {...createAiHandlers("tags")}
+            >
               <input
                 placeholder="front end"
                 value={newTicket.tags.join(", ")}
@@ -185,12 +222,15 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
                 }}
                 className={inputBase}
               />
-
+            </InputWithAi>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className={labelBase}>
             Category
-
+            <InputWithAi
+              suggestion={aiSuggestions?.category}
+              {...createAiHandlers("category")}
+            >
               <input
                 placeholder="Networking"
                 value={newTicket.category}
@@ -201,7 +241,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
                 }
                 className={inputBase}
               />
-
+            </InputWithAi>
           </label>
         </div>
       </div>
@@ -222,17 +262,15 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
       <div className="flex justify-end gap-3">
         <button
           onClick={() => onClose()}
-          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+          className={`${buttonBase} ${buttonSecondary}`}
         >
           Cancel
         </button>
         <button
           onClick={() => submitNewTicket()}
           disabled={isSubmitDisabled}
-          className={`rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            isSubmitDisabled
-              ? "cursor-not-allowed bg-slate-300"
-              : "bg-blue-600 hover:bg-blue-700"
+          className={`${buttonBase} focus:ring-blue-500 ${
+            isSubmitDisabled ? "cursor-not-allowed bg-slate-300" : buttonPrimary
           }`}
         >
           Submit

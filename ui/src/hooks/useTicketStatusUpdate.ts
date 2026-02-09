@@ -1,11 +1,11 @@
 import { useState, useCallback } from "react";
-import type { Ticket, TicketStatus } from "../types/types";
+import type { Ticket, TicketStatus, ToastMessage } from "../types/types";
 import updateTicket from "../services/updateTicket";
 
 export default function useTicketStatusUpdate(
   tickets: Ticket[],
   setTickets: React.Dispatch<React.SetStateAction<Ticket[]>>,
-  setStatusError: React.Dispatch<React.SetStateAction<string[]>>,
+  setToastMessages: React.Dispatch<React.SetStateAction<ToastMessage[]>>,
 ) {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -30,9 +30,12 @@ export default function useTicketStatusUpdate(
             t.id === ticketId ? { ...t, status: previousStatus } : t,
           ),
         );
-        setStatusError((prev: any) => [
+        setToastMessages((prev) => [
           ...prev,
-          `Failed to update status of ticket to "${nextStatus}". Change reverted. Please try again.`,
+          {
+            type: "error",
+            message: `Failed to update status of ticket to "${nextStatus}". Change reverted. Please try again.`,
+          },
         ]);
         return;
       }
@@ -40,6 +43,13 @@ export default function useTicketStatusUpdate(
       setTickets((prev) =>
         prev.map((t) => (t.id === ticketId ? { ...t, ...updated } : t)),
       );
+      setToastMessages((prev) => [
+        ...prev,
+        {
+          type: "success",
+          message: `Status updated to "${nextStatus}".`,
+        },
+      ]);
     },
     [tickets, setTickets],
   );

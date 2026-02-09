@@ -2,44 +2,51 @@ import Header from "./Header";
 import FilterToolBar from "./FilterToolBar";
 import TicketTable from "./TicketTable";
 import { useState, useEffect } from "react";
-import type { Ticket, FilterObject } from "../types/types";
+import type { Ticket, FilterObject, ToastMessage } from "../types/types";
 import NewTicketForm from "./NewTicketForm";
 import Modal from "./Modal";
 import getTickets from "../services/getTickets";
-import ErrorToast from "./ErrorToast";
+import ToastMessages from "./ToastMessages";
 import useTicketStatusUpdate from "../hooks/useTicketStatusUpdate";
 
 function filterTicekts(tickets: Ticket[], filters: FilterObject): Ticket[] {
-  const filtered = [...tickets].filter(
-    (item) =>
-      item.category.includes(filters.categoryFilter) &&
-      item.status.includes(filters.statusFilter) &&
-      item.priority.includes(filters.priorityFilter) &&
-      (item.title
-        .toLocaleLowerCase()
-        .includes(filters.searchString.toLocaleLowerCase()) ||
-        item.description
-          .toLocaleLowerCase()
-          .includes(filters.searchString.toLocaleLowerCase()) ||
-        item.ai_response
-          .toLocaleLowerCase()
-          .includes(filters.searchString.toLocaleLowerCase()) ||
-        item.tags.some(
-          (word) =>
-            word.includes(filters.searchString.toLocaleLowerCase()) ||
-            item.category.includes(filters.searchString.toLocaleLowerCase()) ||
-            item.status.includes(filters.searchString.toLocaleLowerCase()) ||
-            item.priority.includes(filters.searchString.toLocaleLowerCase()),
-        )),
-  );
+  const search = filters.searchString.trim().toLowerCase();
+  const categoryFilter = filters.categoryFilter.toLowerCase();
+  const statusFilter = filters.statusFilter.toLowerCase();
+  const priorityFilter = filters.priorityFilter.toLowerCase();
+
+  const filtered = [...tickets].filter((item) => {
+    const matchesFilters =
+      item.category.toLowerCase().includes(categoryFilter) &&
+      item.status.toLowerCase().includes(statusFilter) &&
+      item.priority.toLowerCase().includes(priorityFilter);
+
+    if (!matchesFilters) return false;
+
+    if (!search) return true;
+
+    const matchesSearch =
+      item.title.toLowerCase().includes(search) ||
+      item.description.toLowerCase().includes(search) ||
+      item.ai_response.toLowerCase().includes(search) ||
+      item.category.toLowerCase().includes(search) ||
+      item.status.toLowerCase().includes(search) ||
+      item.priority.toLowerCase().includes(search) ||
+      item.email.toLowerCase().includes(search) ||
+      item.department.toLowerCase().includes(search) ||
+      item.tags.some((tag) => tag.toLowerCase().includes(search));
+
+    return matchesSearch;
+  });
 
   return filtered;
 }
 
 export default function TicketDashboard() {
-  // TODO: look if we need a state for the tickets since we dont use the setter directly
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [statusError, setStatusError] = useState<string[]>([]);
+  const [toastMessages, setToastMessages] = useState<ToastMessage[]>([]);
+
+  //polling to fetch new tickets
   useEffect(() => {
     const getAllTickets = async () => {
       const existingTickets = await getTickets();
@@ -51,12 +58,12 @@ export default function TicketDashboard() {
   }, []);
 
   useEffect(() => {
-    if (statusError.length == 0) return;
+    if (toastMessages.length == 0) return;
     const timeoutId = setTimeout(() => {
-      setStatusError((prev) => [...prev].slice(0, -1));
+      setToastMessages((prev) => [...prev].slice(0, -1));
     }, 5000);
     return () => clearTimeout(timeoutId);
-  }, [statusError]);
+  }, [toastMessages]);
 
   const [filters, setFilters] = useState<FilterObject>({
     searchString: "",
@@ -71,7 +78,7 @@ export default function TicketDashboard() {
   const { handleTicketStatusChange, updatingId } = useTicketStatusUpdate(
     tickets,
     setTickets,
-    setStatusError,
+    setToastMessages,
   );
 
   return (
@@ -84,7 +91,7 @@ export default function TicketDashboard() {
         updatingId={updatingId}
       />
 
-      <ErrorToast errorMessages={statusError} />
+      <ToastMessages toastMessages={toastMessages} />
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <NewTicketForm onClose={() => setIsModalOpen(false)} />
