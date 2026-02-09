@@ -6,13 +6,17 @@ A simple ticket management app with a React + Vite UI and a FastAPI + SQLite bac
 
 ### 1) Backend (FastAPI)
 
-From project root:
+**macOS (if you don’t have `python3` installed):**
+```bash
+brew install python
+```
 
+**Run from root (macOS/Linux):**
 ```bash
 cd server
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-pip install fastapi uvicorn
+python3 -m pip install fastapi uvicorn
 uvicorn main:app --reload --port 8000
 ```
 
@@ -54,6 +58,39 @@ AI suggestions are **mocked** in the backend. The endpoint `POST /ticket/suggest
 ## Design Decisions & Known Limitations
 
 **Design decisions**
+- Ticket objects are intentionally limited to the fields below:
+  ```ts
+  export type Ticket = {
+    id: string;
+    title: string;
+    description: string;
+    status: TicketStatus;
+    category: TicketCategory;
+    tags: string[];
+    priority: TicketPriority;
+    email: string;
+    department: string;
+    ai_response: string;
+  };
+
+  export const STATUS_OPTIONS = [
+    "Open",
+    "In progress",
+    "Blocked",
+    "Resolved",
+    "Closed",
+  ] 
+
+  export const CATEGORY_OPTIONS = [
+    "Bug",
+    "Feature",
+    "Infrastructure",
+    "Enhancement",
+    "Design",
+  ]
+
+  export const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"]
+  ```
 - Tags are saved in the database as a array, but in the form creation are treated as a string separated by commas.
 - Tickes order from newest to oldest.
 - Headless component used for inputs with AI suggested fields and for new ticket form modal.
