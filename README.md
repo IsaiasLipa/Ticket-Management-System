@@ -105,6 +105,8 @@ AI suggestions are **mocked** in the backend. The endpoint `POST /ticket/suggest
 - Polling can become inefficient at scale (WebSockets/SSE would be better).
 - The modal form can grow long; it is scrollable but still a single-page form.
 
+
+- Screen recording of functioning app included 
 ## API Endpoints
 
 - `GET /tickets` Get all tickets
