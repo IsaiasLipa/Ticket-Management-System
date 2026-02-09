@@ -1,8 +1,16 @@
 import { TABLE_HEADERS } from "../constants/constants";
-import type { Ticket } from "../types/types";
+import type { Ticket, TicketStatus } from "../types/types";
 import TicketRow from "./TicketRow";
 
-export default function TicektTable({ tickets }: { tickets: Ticket[] }) {
+export default function TicketTable({
+  tickets,
+  onStatusChange,
+  updatingId,
+}: {
+  tickets: Ticket[];
+  onStatusChange: (ticketId: string, nextStatus: TicketStatus) => void;
+  updatingId?: string | null;
+}) {
   const cellBase = "px-4 py-3";
 
   return (
@@ -23,7 +31,12 @@ export default function TicektTable({ tickets }: { tickets: Ticket[] }) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {tickets.map((ticket) => (
-              <TicketRow key={ticket.id} ticket={ticket} />
+              <TicketRow
+                key={ticket.id}
+                ticket={ticket}
+                onStatusChange={onStatusChange}
+                isUpdating={updatingId === ticket.id}
+              />
             ))}
           </tbody>
         </table>

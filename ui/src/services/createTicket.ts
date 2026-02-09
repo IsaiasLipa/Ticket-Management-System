@@ -1,19 +1,14 @@
-export default async function newTicketApi({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+import type { Ticket } from "../types/types";
+
+export default async function createTicket(newTicket: Ticket) {
   try {
-    const response = await fetch("http://localhost:8000/ticket/suggest", {
+    const response = await fetch("http://localhost:8000/ticket", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        title: title,
-        description: description,
+        newTicket: newTicket,
       }),
     });
     if (!response.ok) {

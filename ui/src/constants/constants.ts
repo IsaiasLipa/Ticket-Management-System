@@ -3,11 +3,11 @@ import type { Ticket } from "../types/types";
 export const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"] as const;
 
 export const STATUS_OPTIONS = [
-  "open",
-  "in_progress",
-  "blocked",
-  "resolved",
-  "closed",
+  "Open",
+  "In progress",
+  "Blocked",
+  "Resolved",
+  "Closed",
 ] as const;
 
 export const CATEGORY_OPTIONS = [
@@ -21,11 +21,11 @@ export const CATEGORY_OPTIONS = [
 export const TABLE_HEADERS = [
   "Title",
   "Description",
-  "Status",
   "Category",
   "Tags",
   "Priority",
   "AI response",
+  "Status",
 ];
 
 export const priorityStyles: Record<Ticket["priority"], string> = {

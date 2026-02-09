@@ -1,7 +1,15 @@
 import { STATUS_OPTIONS, priorityStyles } from "../constants/constants";
-import type { Ticket } from "../types/types";
+import type { Ticket, TicketStatus } from "../types/types";
 
-export default function TicketRow({ ticket }: { ticket: Ticket }) {
+export default function TicketRow({
+  ticket,
+  onStatusChange,
+  isUpdating = false,
+}: {
+  ticket: Ticket;
+  onStatusChange: (ticketId: string, nextStatus: TicketStatus) => void;
+  isUpdating?: boolean;
+}) {
   const cellBase = "px-4 py-3";
 
   return (
@@ -12,19 +20,7 @@ export default function TicketRow({ ticket }: { ticket: Ticket }) {
       <td className={`${cellBase} max-w-md text-slate-600`}>
         {ticket.description}
       </td>
-      <td className={`${cellBase}`}>
-        <select
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          defaultValue={ticket.status}
-          aria-label="Ticket status"
-        >
-          {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-      </td>
+
       <td className={`${cellBase} text-slate-700`}>{ticket.category}</td>
       <td className={`${cellBase}`}>
         <div className="flex flex-wrap gap-2">
@@ -47,6 +43,27 @@ export default function TicketRow({ ticket }: { ticket: Ticket }) {
       </td>
       <td className={`${cellBase} max-w-md text-slate-600`}>
         {ticket.ai_response}
+      </td>
+      <td className={`${cellBase}`}>
+        <select
+          className={`w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            isUpdating
+              ? "cursor-wait border-slate-200 bg-slate-100 text-slate-500"
+              : "border-slate-300 bg-white text-slate-700 focus:border-blue-500"
+          }`}
+          value={ticket.status}
+          aria-label="Ticket status"
+          onChange={(e) =>
+            onStatusChange(ticket.id, e.target.value as TicketStatus)
+          }
+          disabled={isUpdating}
+        >
+          {STATUS_OPTIONS.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
       </td>
     </tr>
   );

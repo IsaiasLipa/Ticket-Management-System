@@ -22,3 +22,8 @@ export type FilterObject = {
   statusFilter: string;
   priorityFilter: string;
 };
+
+export type AiSuggestion = Pick<
+  Ticket,
+  "priority" | "tags" | "category" | "ai_response"
+>;
