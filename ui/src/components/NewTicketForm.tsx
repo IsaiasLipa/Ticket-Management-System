@@ -28,12 +28,12 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const inputBase =
-    "mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const labelBase = "text-sm font-medium text-slate-700";
+    "mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400";
+  const labelBase = "text-sm font-medium text-slate-700 dark:text-slate-200";
   const buttonBase =
     "rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-offset-2";
   const buttonSecondary =
-    "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50";
+    "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700";
   const buttonPrimary = "bg-blue-600 text-white hover:bg-blue-700";
 
   const isSubmitDisabled =
@@ -99,7 +99,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="max-h-[85vh] space-y-6 overflow-y-auto p-2 pr-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           Create new Ticket
         </h2>
       </div>
@@ -153,7 +153,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
         )}
         {/* Error message for failed Ai suggestion call */}
         {aiError && (
-          <span className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          <span className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-400 dark:bg-rose-950/40 dark:text-rose-200">
             Ai suggestions failed to load. Please try again.
           </span>
         )}
@@ -263,7 +263,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
       </div>
 
       {newTicket.ai_response && (
-        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
           <div>
             <label className="text-sm font-semibold uppercase tracking-wide text-slate-600">
               Suggested AI solution

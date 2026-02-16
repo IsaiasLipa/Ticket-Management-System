@@ -32,3 +32,8 @@ export type ToastMessage = {
   type: "success" | "error";
   message: string;
 };
+
+export type ThemeContextValue = {
+  isDarkTheme: boolean;
+  changeTheme: () => void;
+};

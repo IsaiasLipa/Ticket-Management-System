@@ -26,6 +26,7 @@ export default function useTicketStatusUpdate(
       setUpdatingId(null);
 
       if (!updated) {
+        // revert to previous status when failed update
         setTickets((prev) =>
           prev.map((t) =>
             t.id === ticketId ? { ...t, status: previousStatus } : t,

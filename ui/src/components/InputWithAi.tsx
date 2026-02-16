@@ -15,7 +15,7 @@ export default function InputWithAi<T>({
     "rounded-md px-3 py-1 text-xs font-semibold shadow-sm transition";
   const buttonAccept = "bg-emerald-600 text-white hover:bg-emerald-700";
   const buttonReject =
-    "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50";
+    "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700";
 
   if (!suggestion) {
     return <>{children}</>;
@@ -25,7 +25,7 @@ export default function InputWithAi<T>({
     <div className="space-y-3">
       {children}
 
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
         <p className="mt-1">{String(suggestion)}</p>
 
         <div className="mt-2 flex gap-2">

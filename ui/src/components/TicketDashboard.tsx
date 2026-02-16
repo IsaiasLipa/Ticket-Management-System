@@ -47,15 +47,12 @@ export default function TicketDashboard() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [toastMessages, setToastMessages] = useState<ToastMessage[]>([]);
 
-  //polling to fetch new tickets
   useEffect(() => {
     const getAllTickets = async () => {
       const existingTickets = await getTickets();
       setTickets(existingTickets.reverse());
     };
     getAllTickets();
-    const intervalId = setInterval(getAllTickets, 8000);
-    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -83,7 +80,7 @@ export default function TicketDashboard() {
   );
 
   return (
-    <div className="mx-6 my-4">
+    <div className="px-6 py-4">
       <Header openModal={() => setIsModalOpen(true)} />
       <FilterToolBar filters={filters} setFilters={setFilters} />
       <TicketTable

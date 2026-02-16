@@ -15,21 +15,21 @@ export default function TicketTable({
 
   return (
     <>
-      <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
+      <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
+          <thead className="bg-slate-50 dark:bg-slate-800">
             <tr>
               {TABLE_HEADERS.map((item, index) => (
                 <th
                   key={index}
-                  className={`${cellBase} text-left font-semibold text-slate-700`}
+                  className={`${cellBase} text-left font-semibold text-slate-700 dark:text-slate-200`}
                 >
                   {item}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {tickets.map((ticket) => (
               <TicketRow
                 key={ticket.id}
