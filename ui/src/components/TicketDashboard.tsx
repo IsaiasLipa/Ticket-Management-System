@@ -8,6 +8,7 @@ import Modal from "./Modal";
 import getTickets from "../services/getTickets";
 import ToastMessages from "./ToastMessages";
 import useTicketStatusUpdate from "../hooks/useTicketStatusUpdate";
+import PagesButtons from "./PageButtons";
 
 function filterTicekts(tickets: Ticket[], filters: FilterObject): Ticket[] {
   // Apply filters and search with AND semantics (case-insensitive).
@@ -46,14 +47,26 @@ function filterTicekts(tickets: Ticket[], filters: FilterObject): Ticket[] {
 export default function TicketDashboard() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [toastMessages, setToastMessages] = useState<ToastMessage[]>([]);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [totalTicketNum, setTotalTicketNum] = useState<number>(0);
 
   useEffect(() => {
     const getAllTickets = async () => {
-      const existingTickets = await getTickets();
-      setTickets(existingTickets.reverse());
+      try {
+        const { tickets, total } = await getTickets(pageNumber);
+        setTickets(tickets);
+        setTotalTicketNum(total);
+      } catch (e) {
+        setToastMessages((prev) => [
+          ...prev,
+          { type: "error", message: "Failed to load tickets." },
+        ]);
+        setTickets([]);
+        setTotalTicketNum(0);
+      }
     };
     getAllTickets();
-  }, []);
+  }, [pageNumber]);
 
   useEffect(() => {
     if (toastMessages.length == 0) return;
@@ -88,7 +101,10 @@ export default function TicketDashboard() {
         onStatusChange={handleTicketStatusChange}
         updatingId={updatingId}
       />
-
+      <PagesButtons
+        setPageNumber={setPageNumber}
+        totalTicketNum={totalTicketNum}
+      />
       <ToastMessages toastMessages={toastMessages} />
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>

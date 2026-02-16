@@ -14,7 +14,9 @@ export default function TicketRow({
 
   return (
     <tr className="hover:bg-slate-100 dark:hover:bg-slate-800">
-      <td className={`${cellBase} font-medium text-slate-900 dark:text-slate-100`}>
+      <td
+        className={`${cellBase} font-medium text-slate-900 dark:text-slate-100`}
+      >
         {ticket.title}
       </td>
       <td className={`${cellBase} max-w-md text-slate-600 dark:text-slate-300`}>

@@ -2,8 +2,6 @@ import { useContext } from "react";
 import { ThemeContext } from "../App";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 
-
-
 export default function Header({ openModal }: { openModal: () => void }) {
   const theme = useContext(ThemeContext);
   return (
@@ -13,10 +11,10 @@ export default function Header({ openModal }: { openModal: () => void }) {
       </h1>
       <div className="flex items-center gap-2">
         <button
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-blue-600 text-sm font-semibold text-white dark:bg-emerald-500 dark:text-slate-900"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-emerald-500 dark:text-slate-900 dark:hover:bg-emerald-400"
           onClick={() => theme?.changeTheme()}
         >
-          {theme?.isDarkTheme ?  <MdLightMode/> : <MdDarkMode/>}
+          {theme?.isDarkTheme ? <MdLightMode /> : <MdDarkMode />}
         </button>
         <button
           onClick={() => openModal()}

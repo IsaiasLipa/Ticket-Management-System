@@ -131,7 +131,7 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
             required
             className={`${inputBase} min-h-30`}
           />
-        </label> 
+        </label>
         {/* Ai suggestion button only visible when title and description defined */}
         {newTicket.title && newTicket.description && (
           <div className="flex justify-end">
@@ -245,7 +245,10 @@ export default function NewTicketForm({ onClose }: { onClose: () => void }) {
                 value={newTicket.category}
                 onChange={(e) =>
                   setNewTicket((prev) => {
-                    return { ...prev, category: e.target.value as TicketCategory };
+                    return {
+                      ...prev,
+                      category: e.target.value as TicketCategory,
+                    };
                   })
                 }
                 className={inputBase}

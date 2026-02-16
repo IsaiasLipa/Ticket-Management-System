@@ -230,22 +230,36 @@ def update_ticket(ticket_id: str, payload: TicketUpdate):
     return item
 
 @app.get("/tickets")
-def get_tickets():
+def get_tickets(pageNum: int = 1):
+    if pageNum < 1:
+        raise HTTPException(status_code=400, detail="pageNum must be >= 1")
+
     conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM tickets"
+        "SELECT COUNT(id) FROM tickets",
+    )
+    total = cursor.fetchone()[0]
+
+    page_size = 10
+    offset = page_size * (pageNum - 1)
+    if total > 0 and offset >= total:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Page out of range")
+
+    cursor.execute(
+        "SELECT * FROM tickets ORDER BY rowid DESC LIMIT ? OFFSET ?",
+        (page_size, offset),
     )
     rows = cursor.fetchall()
-    conn.close()
-
-    if not rows:
-        raise HTTPException(status_code=404, detail="Tickets not found")
-
     tickets = []
+
     for r in rows:
         item = dict(r)
         item["tags"] = json.loads(item["tags"])  # converts string -> list
         tickets.append(item)
-    return tickets
+    
+    conn.close()
+
+    return {"total": total, "tickets": tickets}

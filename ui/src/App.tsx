@@ -3,9 +3,7 @@ import TicketDashboard from "./components/TicketDashboard";
 import { createContext, useState } from "react";
 import type { ThemeContextValue } from "./types/types";
 
-const ThemeContext = createContext<ThemeContextValue | undefined>(
-  undefined,
-);
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 function App() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
