@@ -1,7 +1,7 @@
 import Header from "./Header";
 import FilterToolBar from "./FilterToolBar";
 import TicketTable from "./TicketTable";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Ticket, FilterObject, ToastMessage } from "../types/types";
 import NewTicketForm from "./NewTicketForm";
 import Modal from "./Modal";
@@ -10,50 +10,24 @@ import ToastMessages from "./ToastMessages";
 import useTicketStatusUpdate from "../hooks/useTicketStatusUpdate";
 import PagesButtons from "./PageButtons";
 
-function filterTicekts(tickets: Ticket[], filters: FilterObject): Ticket[] {
-  // Apply filters and search with AND semantics (case-insensitive).
-  const search = filters.searchString.trim().toLowerCase();
-  const categoryFilter = filters.categoryFilter.toLowerCase();
-  const statusFilter = filters.statusFilter.toLowerCase();
-  const priorityFilter = filters.priorityFilter.toLowerCase();
-
-  const filtered = [...tickets].filter((item) => {
-    const matchesFilters =
-      item.category.toLowerCase().includes(categoryFilter) &&
-      item.status.toLowerCase().includes(statusFilter) &&
-      item.priority.toLowerCase().includes(priorityFilter);
-
-    if (!matchesFilters) return false;
-
-    if (!search) return true;
-
-    const matchesSearch =
-      item.title.toLowerCase().includes(search) ||
-      item.description.toLowerCase().includes(search) ||
-      item.ai_response.toLowerCase().includes(search) ||
-      item.category.toLowerCase().includes(search) ||
-      item.status.toLowerCase().includes(search) ||
-      item.priority.toLowerCase().includes(search) ||
-      item.email.toLowerCase().includes(search) ||
-      item.department.toLowerCase().includes(search) ||
-      item.tags.some((tag) => tag.toLowerCase().includes(search));
-
-    return matchesSearch;
-  });
-
-  return filtered;
-}
-
 export default function TicketDashboard() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [toastMessages, setToastMessages] = useState<ToastMessage[]>([]);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [totalTicketNum, setTotalTicketNum] = useState<number>(0);
+  const [filters, setFilters] = useState<FilterObject>({
+    searchString: "",
+    categoryFilter: "",
+    statusFilter: "",
+    priorityFilter: "",
+  });
 
-  useEffect(() => {
-    const getAllTickets = async () => {
+  const filtersKey = JSON.stringify(filters);
+  const prevFiltersKeyRef = useRef(filtersKey);
+
+  const getAllTickets = async () => {
       try {
-        const { tickets, total } = await getTickets(pageNumber);
+        const { tickets, total } = await getTickets(pageNumber, filters);
         setTickets(tickets);
         setTotalTicketNum(total);
       } catch (e) {
@@ -65,8 +39,17 @@ export default function TicketDashboard() {
         setTotalTicketNum(0);
       }
     };
+
+  useEffect(() => {
+    const filtersChanged = prevFiltersKeyRef.current !== filtersKey;
+    if (filtersChanged && pageNumber !== 1) {
+      prevFiltersKeyRef.current = filtersKey;
+      setPageNumber(1);
+      return;
+    }
+    prevFiltersKeyRef.current = filtersKey;
     getAllTickets();
-  }, [pageNumber]);
+  }, [pageNumber, filtersKey]);
 
   useEffect(() => {
     if (toastMessages.length == 0) return;
@@ -76,14 +59,6 @@ export default function TicketDashboard() {
     return () => clearTimeout(timeoutId);
   }, [toastMessages]);
 
-  const [filters, setFilters] = useState<FilterObject>({
-    searchString: "",
-    categoryFilter: "",
-    statusFilter: "",
-    priorityFilter: "",
-  });
-
-  const filteredTickets = filterTicekts(tickets, filters);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { handleTicketStatusChange, updatingId } = useTicketStatusUpdate(
@@ -97,11 +72,12 @@ export default function TicketDashboard() {
       <Header openModal={() => setIsModalOpen(true)} />
       <FilterToolBar filters={filters} setFilters={setFilters} />
       <TicketTable
-        tickets={filteredTickets}
+        tickets={tickets}
         onStatusChange={handleTicketStatusChange}
         updatingId={updatingId}
       />
       <PagesButtons
+        pageSelected={pageNumber}
         setPageNumber={setPageNumber}
         totalTicketNum={totalTicketNum}
       />

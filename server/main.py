@@ -230,27 +230,72 @@ def update_ticket(ticket_id: str, payload: TicketUpdate):
     return item
 
 @app.get("/tickets")
-def get_tickets(pageNum: int = 1):
+def get_tickets(
+    pageNum: int = 1,
+    category: str = "",
+    status: str = "",
+    priority: str = "",
+    searchString: str = "",
+):
     if pageNum < 1:
         raise HTTPException(status_code=400, detail="pageNum must be >= 1")
 
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT COUNT(id) FROM tickets",
-    )
-    total = cursor.fetchone()[0]
+    category_filter = f"%{category}%" if category else "%"
+    status_filter = f"%{status}%" if status else "%"
+    priority_filter = f"%{priority}%" if priority else "%"
+    search_filter = f"%{searchString}%" if searchString else "%"
 
     page_size = 10
     offset = page_size * (pageNum - 1)
-    if total > 0 and offset >= total:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Page out of range")
 
+    where_clause = """
+    WHERE category LIKE ? AND status LIKE ? AND priority LIKE ?
+      AND (
+        title LIKE ?
+        OR description LIKE ?
+        OR category LIKE ?
+        OR tags LIKE ?
+        OR priority LIKE ?
+        OR ai_response LIKE ?
+        OR email LIKE ?
+        OR department LIKE ?
+        OR status LIKE ?
+      )
+    """
+    base_params = [
+        category_filter,
+        status_filter,
+        priority_filter,
+        search_filter,
+        search_filter,
+        search_filter,
+        search_filter,
+        search_filter,
+        search_filter,
+        search_filter,
+        search_filter,
+        search_filter,
+    ]
+
+    # 1) total count (no LIMIT/OFFSET)
     cursor.execute(
-        "SELECT * FROM tickets ORDER BY rowid DESC LIMIT ? OFFSET ?",
-        (page_size, offset),
+        f"SELECT COUNT(*) FROM tickets {where_clause}",
+        base_params,
+    )
+    total = cursor.fetchone()[0]
+
+    # 2) paged rows
+    cursor.execute(
+        f"""
+        SELECT * FROM tickets
+        {where_clause}
+        ORDER BY rowid DESC
+        LIMIT ? OFFSET ?
+        """,
+        (*base_params, page_size, offset),
     )
     rows = cursor.fetchall()
     tickets = []
