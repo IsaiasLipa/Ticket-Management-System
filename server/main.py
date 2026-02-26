@@ -1,5 +1,6 @@
 import random
-from fastapi import FastAPI, HTTPException
+import asyncio
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,6 +24,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class ConnectionManager:
+    def __init__(self) -> None:
+        self.active_connections: set[WebSocket] = set()
+
+    async def connect(self, websocket: WebSocket) -> None:
+        await websocket.accept()
+        self.active_connections.add(websocket)
+
+    def disconnect(self, websocket: WebSocket) -> None:
+        self.active_connections.discard(websocket)
+
+    async def broadcast(self, message: dict) -> None:
+        dead_connections: list[WebSocket] = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                dead_connections.append(connection)
+        for connection in dead_connections:
+            self.active_connections.discard(connection)
+
+
+manager = ConnectionManager()
 
 class TicketRequest(BaseModel):
     title: str
@@ -110,7 +135,7 @@ def suggest_ticket(request: TicketRequest):
     }
 
 @app.post("/ticket")
-def write_ticket_to_db(payload: TicketPayload):
+async def write_ticket_to_db(payload: TicketPayload):
     ticket = payload.newTicket
     ticket_id = ticket.id or f"TCK-{uuid4().hex[:8].upper()}"
 
@@ -146,7 +171,7 @@ def write_ticket_to_db(payload: TicketPayload):
     )
     conn.commit()
     ## artificial delay
-    time.sleep(0.8)
+    await asyncio.sleep(0.8)
     cursor.execute("SELECT * FROM tickets WHERE id = ?", (ticket_id,))
     row = cursor.fetchone()
     conn.close()
@@ -156,6 +181,7 @@ def write_ticket_to_db(payload: TicketPayload):
 
     item = dict(row)
     item["tags"] = json.loads(item["tags"])
+    await manager.broadcast({"type": "ticket_created", "ticket": item})
     return item
 
 
@@ -191,6 +217,15 @@ def update_ticket(ticket_id: str, payload: TicketUpdate):
     item = dict(row)
     item["tags"] = json.loads(item["tags"])
     return item
+
+@app.websocket("/ws/tickets")
+async def tickets_ws(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 @app.get("/tickets")
 def get_tickets(

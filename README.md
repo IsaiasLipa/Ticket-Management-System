@@ -100,12 +100,11 @@ AI suggestions are **mocked** in the backend. The endpoint `POST /ticket/suggest
 - Tailwind CSS utility-first styling for rapid UI iteration.
 - Pagination and filtering is done in the backend to improve performace if scalable 
 - OpenAi model is used to determine the solution suggestion and the tags for the mock IT ticket
+- Websocket added for a new ticket 
 
 
 **Known limitations**
-- AI suggestions are mocked; no real model integration.
 - Tags are stored as JSON strings in SQLite (not normalized).
-- Polling can become inefficient at scale (WebSockets/SSE would be better).
 - The modal form can grow long; it is scrollable but still a single-page form.
 - A modal for editing existing tickets can be added as next steps.
 
