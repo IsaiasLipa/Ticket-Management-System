@@ -1,12 +1,18 @@
+import random
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from db import get_db
 import json
-import random
 from uuid import uuid4
 import time
+from openai import OpenAI
+from dotenv import load_dotenv
+from pathlib import Path
+import os
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 app = FastAPI()
 
@@ -57,94 +63,51 @@ class TicketUpdate(BaseModel):
     department: Optional[str] = None
     ai_response: Optional[str] = None
 
-## Mock AI suggestions
+## Mock IT suggestions using OpenAi
 @app.post("/ticket/suggest", response_model=TicketSuggestion)
 def suggest_ticket(request: TicketRequest):
-    # artificial delay
-    time.sleep(1)
-    text = f"{request.title} {request.description}".lower()
-
-    responses = [
+    title = request.title
+    description = request.description
+    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    messages = [
         {
-            "category": "Infrastructure",
-            "tags": ["VPN", "timeout", "remote access"],
-            "priority": "High",
-            "suggested_response": (
-                "Please ensure you're on the company network and restart your VPN client. "
-                "If that fails, contact IT Support at x1234."
+            "role": "user",
+            "content": (
+                "Suggest one possible solution for an IT ticket. "
+                "Make the suggestion is thoughtful and practical "
+                "Must be under 100 words. Skip intros and conclusions. "
+                "Do not give me a list. I need a paragraph"
+                "use the following tile and description to come up with the suggestion:" + title + "," + description
             ),
-        },
-        {
-            "category": "Bug",
-            "tags": ["login", "credentials", "auth"],
-            "priority": "High",
-            "suggested_response": (
-                "Please reset your password and try again. If the issue persists, "
-                "clear your browser cache and contact IT Support."
-            ),
-        },
-        {
-            "category": "Feature",
-            "tags": ["email", "notifications", "delayed"],
-            "priority": "Medium",
-            "suggested_response": (
-                "We are investigating delayed mail delivery. In the meantime, "
-                "check your spam folder and ensure your inbox is not full."
-            ),
-        },
-        {
-            "category": "Infrastructure",
-            "tags": ["slow", "timeout", "latency"],
-            "priority": "Medium",
-            "suggested_response": (
-                "Performance may be impacted by peak usage. Please retry in a few minutes "
-                "and report if the issue continues."
-            ),
-        },
-        {
-            "category": "Enhancement",
-            "tags": ["mobile", "ios", "android"],
-            "priority": "Low",
-            "suggested_response": (
-                "Please update the app to the latest version and retry. "
-                "If the issue persists, reinstall the app."
-            ),
-        },
-        {
-            "category": "Design",
-            "tags": ["ui", "layout", "display"],
-            "priority": "Low",
-            "suggested_response": (
-                "Thanks for the feedback. We will review the layout and follow up with "
-                "improvements in a future release."
-            ),
-        },
+        }
     ]
+    suggested_response = client.chat.completions.create(
+        model=os.environ["AI_MODEL"],
+        messages=messages,
+    )
 
-    keyword_map = {
-        "vpn": 0,
-        "network": 0,
-        "login": 1,
-        "password": 1,
-        "auth": 1,
-        "email": 2,
-        "notification": 2,
-        "slow": 3,
-        "timeout": 3,
-        "latency": 3,
-        "mobile": 4,
-        "ios": 4,
-        "android": 4,
-        "ui": 5,
-        "layout": 5,
-        "display": 5,
+    suggested_tags = client.chat.completions.create(
+        model=os.environ["AI_MODEL"],
+        messages=[{
+            "role": "user",
+            "content": (
+                "Avoid introductions. Just give me the three tags separated by commas"
+                "Give me only three possible tags string that could be added to a IT ticket that has the title and description provided :" + title + "," + description
+            ),
+        }],
+    )
+    print(suggested_response)
+
+    content = suggested_response.choices[0].message.content
+    tags = suggested_tags.choices[0].message.content
+    categories = ["Bug", "Feature", "Infrastructure", "Enhancement", "Design"]
+    priorities = ["Low", "Medium", "High", "Urgent"]
+    return {
+        "category": random.choice(categories),
+        "tags": tags.split(','),
+        "priority": random.choice(priorities),
+        "suggested_response": content,
     }
-
-    for keyword, index in keyword_map.items():
-        if keyword in text:
-            return responses[index]
-
-    return random.choice(responses)
 
 @app.post("/ticket")
 def write_ticket_to_db(payload: TicketPayload):
