@@ -1,4 +1,3 @@
-import random
 import asyncio
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
@@ -88,51 +87,67 @@ class TicketUpdate(BaseModel):
     department: Optional[str] = None
     ai_response: Optional[str] = None
 
-## Mock IT suggestions using OpenAi
+CATEGORIES = ["Bug", "Feature", "Infrastructure", "Enhancement", "Design"]
+PRIORITIES = ["Low", "Medium", "High", "Urgent"]
+
+
+def _pick(value, allowed: list[str], default: str) -> str:
+    """Match the model's answer to an allowed option (case-insensitive), else fall back."""
+    if isinstance(value, str):
+        for option in allowed:
+            if option.lower() == value.strip().lower():
+                return option
+    return default
+
+
+def parse_suggestion(raw: str) -> dict:
+    """Turn the model's JSON reply into a valid TicketSuggestion payload."""
+    try:
+        data = json.loads(raw)
+    except (TypeError, json.JSONDecodeError):
+        data = {}
+    if not isinstance(data, dict):
+        data = {}
+
+    tags = data.get("tags")
+    if isinstance(tags, str):
+        tags = tags.split(",")
+    if not isinstance(tags, list):
+        tags = []
+    tags = [str(t).strip() for t in tags if str(t).strip()][:3]
+
+    response = data.get("suggested_response")
+    return {
+        "category": _pick(data.get("category"), CATEGORIES, "Bug"),
+        "priority": _pick(data.get("priority"), PRIORITIES, "Medium"),
+        "tags": tags,
+        "suggested_response": response.strip() if isinstance(response, str) else "",
+    }
+
+
+## AI triage: category, priority, tags and a suggested fix in one call
 @app.post("/ticket/suggest", response_model=TicketSuggestion)
 def suggest_ticket(request: TicketRequest):
-    title = request.title
-    description = request.description
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    messages = [
-        {
-            "role": "user",
-            "content": (
-                "Suggest one possible solution for an IT ticket. "
-                "Make the suggestion is thoughtful and practical "
-                "Must be under 100 words. Skip intros and conclusions. "
-                "Do not give me a list. I need a paragraph"
-                "use the following tile and description to come up with the suggestion:" + title + "," + description
-            ),
-        }
-    ]
-    suggested_response = client.chat.completions.create(
-        model=os.environ["AI_MODEL"],
-        messages=messages,
+    prompt = (
+        "You are triaging an IT support ticket. Reply with a JSON object with exactly these keys:\n"
+        f'- "category": one of {CATEGORIES}\n'
+        f'- "priority": one of {PRIORITIES}, based on urgency and business impact\n'
+        '- "tags": an array of exactly three short tags\n'
+        '- "suggested_response": one practical, thoughtful solution as a single paragraph '
+        "under 100 words, no list, no intro or conclusion\n\n"
+        f"Title: {request.title}\n"
+        f"Description: {request.description}"
     )
-
-    suggested_tags = client.chat.completions.create(
+    completion = client.chat.completions.create(
         model=os.environ["AI_MODEL"],
-        messages=[{
-            "role": "user",
-            "content": (
-                "Avoid introductions. Just give me the three tags separated by commas"
-                "Give me only three possible tags string that could be added to a IT ticket that has the title and description provided :" + title + "," + description
-            ),
-        }],
+        messages=[{"role": "user", "content": prompt}],
+        response_format={"type": "json_object"},
     )
-    print(suggested_response)
-
-    content = suggested_response.choices[0].message.content
-    tags = suggested_tags.choices[0].message.content
-    categories = ["Bug", "Feature", "Infrastructure", "Enhancement", "Design"]
-    priorities = ["Low", "Medium", "High", "Urgent"]
-    return {
-        "category": random.choice(categories),
-        "tags": tags.split(','),
-        "priority": random.choice(priorities),
-        "suggested_response": content,
-    }
+    suggestion = parse_suggestion(completion.choices[0].message.content)
+    if not suggestion["suggested_response"]:
+        raise HTTPException(status_code=502, detail="AI suggestion was empty")
+    return suggestion
 
 @app.post("/ticket")
 async def write_ticket_to_db(payload: TicketPayload):

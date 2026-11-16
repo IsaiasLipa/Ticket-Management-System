@@ -1,6 +1,6 @@
 # Ticket Management System
 
-A full-stack IT help-desk dashboard. You can create, search, filter and update support tickets. An OpenAI model drafts a suggested fix and tags for each new ticket. New tickets reach every open dashboard in real time over WebSockets.
+A full-stack IT help-desk dashboard. You can create, search, filter and update support tickets. An OpenAI model triages each new ticket: it picks a category and priority, suggests tags, and drafts a fix. New tickets reach every open dashboard in real time over WebSockets.
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4
 - **Backend:** FastAPI (Python), SQLite
@@ -12,10 +12,10 @@ A screen recording of the working app is in the repo root (`Screen Recording 202
 
 - **Ticket dashboard** with 10 tickets per page, newest first, and pagination
 - **Server-side filtering** by category, status and priority, plus free-text search across every ticket field
-- **New ticket form** in a modal. An **AI suggest** button fills in:
-  - a suggested resolution (one paragraph, under 100 words)
+- **New ticket form** in a modal. An **AI suggest** button fills in, from a single model call:
+  - a category and priority
   - three suggested tags
-  - a category and priority (picked at random for now; see [Known limitations](#known-limitations))
+  - a suggested resolution (one paragraph, under 100 words)
 - **Inline status updates** with optimistic UI and toast messages on success or failure
 - **Live updates:** when anyone creates a ticket, the server broadcasts it over `/ws/tickets`. Each open dashboard adds it if it matches that dashboard's current filters.
 
@@ -61,7 +61,7 @@ Run this from the `server/` directory. The SQLite path `data/tickets.db` is rela
 cd server
 python3 -m venv .venv
 source .venv/bin/activate
-pip install fastapi uvicorn openai python-dotenv
+pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
@@ -84,7 +84,7 @@ Open the URL Vite prints (usually `http://localhost:5173`). The UI expects the A
 | `GET`  | `/tickets`            | Paged list of tickets. Query params: `pageNum` (default 1), `category`, `status`, `priority`, `searchString`. Returns `{ total, tickets }`. |
 | `POST` | `/ticket`             | Create a ticket. Body: `{ "newTicket": Ticket }`. Broadcasts `ticket_created` to WebSocket clients. |
 | `PUT`  | `/ticket/{ticket_id}` | Partially update a ticket. Send only the fields to change. |
-| `POST` | `/ticket/suggest`     | AI suggestion. Body: `{ title, description }`. Returns `{ category, tags, priority, suggested_response }`. |
+| `POST` | `/ticket/suggest`     | AI suggestion. Body: `{ title, description }`. Returns `{ category, tags, priority, suggested_response }`. The model replies in JSON mode, and any category or priority outside the allowed values falls back to `Bug` / `Medium`. |
 | `WS`   | `/ws/tickets`         | Pushes `{ type: "ticket_created", ticket }` messages. |
 
 `POST /ticket` and `PUT /ticket/{id}` include an artificial 0.8 s delay. It makes the optimistic UI and loading states visible during demos.
@@ -133,7 +133,6 @@ CREATE TABLE tickets (
 
 ## Known limitations
 
-- AI-suggested **category and priority are random**. Only the resolution text and tags come from the model.
 - Tags are stored as a JSON string, not in a normalized table, so filtering by tag is a substring match.
 - Status updates aren't broadcast. Other clients see them only after their next fetch.
 - You can't edit an existing ticket's fields from the UI yet. Only status can change.
