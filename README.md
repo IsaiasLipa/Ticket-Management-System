@@ -1,28 +1,73 @@
 # Ticket Management System
 
-A simple ticket management app with a React + Vite UI and a FastAPI + SQLite backend. It supports ticket creation, filtering/searching, status updates with optimistic UI, and AI suggestion helpers.
+A full-stack IT help-desk dashboard. You can create, search, filter and update support tickets. An OpenAI model drafts a suggested fix and tags for each new ticket. New tickets reach every open dashboard in real time over WebSockets.
 
-## Setup Instructions (Install + Run Locally)
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4
+- **Backend:** FastAPI (Python), SQLite
+- **AI:** OpenAI Chat Completions (the model is set with the `AI_MODEL` env var)
 
-### 1) Backend (FastAPI)
+A screen recording of the working app is in the repo root (`Screen Recording 2026-02-09 ….mov`).
 
-**macOS (if you don’t have `python3` installed):**
-```bash
-brew install python
+## Features
+
+- **Ticket dashboard** with 10 tickets per page, newest first, and pagination
+- **Server-side filtering** by category, status and priority, plus free-text search across every ticket field
+- **New ticket form** in a modal. An **AI suggest** button fills in:
+  - a suggested resolution (one paragraph, under 100 words)
+  - three suggested tags
+  - a category and priority (picked at random for now; see [Known limitations](#known-limitations))
+- **Inline status updates** with optimistic UI and toast messages on success or failure
+- **Live updates:** when anyone creates a ticket, the server broadcasts it over `/ws/tickets`. Each open dashboard adds it if it matches that dashboard's current filters.
+
+## Project structure
+
+```
+.
+├── server/
+│   ├── main.py          # FastAPI app: REST endpoints, WebSocket, OpenAI calls
+│   ├── db.py            # SQLite connection helper
+│   └── data/tickets.db  # Pre-populated database
+└── ui/
+    └── src/
+        ├── components/  # Dashboard, table, filters, modal, form, toasts, pagination
+        ├── hooks/       # useTicketStatusUpdate (optimistic status changes)
+        ├── services/    # fetch wrappers for each API call
+        ├── constants/   # Status / category / priority options
+        └── types/       # Shared TypeScript types
 ```
 
-**Run from root (macOS/Linux):**
+## Getting started
+
+### Prerequisites
+
+- Python 3.10+
+- Node.js 20+
+- An OpenAI API key
+
+### 1. Environment variables
+
+Create a `.env` file in the **repo root** (the server reads `../.env` relative to `server/`):
+
+```env
+OPENAI_API_KEY=sk-...
+AI_MODEL=gpt-4o-mini
+```
+
+### 2. Backend
+
+Run this from the `server/` directory. The SQLite path `data/tickets.db` is relative to it.
+
 ```bash
 cd server
 python3 -m venv .venv
 source .venv/bin/activate
-python3 -m pip install fastapi uvicorn
+pip install fastapi uvicorn openai python-dotenv
 uvicorn main:app --reload --port 8000
 ```
 
-### 2) Frontend (Vite + React)
+The API runs at `http://localhost:8000`. Interactive docs are at `http://localhost:8000/docs`.
 
-From project root:
+### 3. Frontend
 
 ```bash
 cd ui
@@ -30,11 +75,38 @@ npm install
 npm run dev
 ```
 
-### 3) Database
+Open the URL Vite prints (usually `http://localhost:5173`). The UI expects the API at `http://localhost:8000`. CORS allows any `http://localhost:<port>` origin.
 
-The API reads from `server/data/tickets.db` (see `server/db.py`). This repo includes a pre-populated DB, so you can run the app without creating the schema manually.
+## API
 
-If you delete/reset the DB, create the schema with:
+| Method | Path                  | Description |
+| ------ | --------------------- | ----------- |
+| `GET`  | `/tickets`            | Paged list of tickets. Query params: `pageNum` (default 1), `category`, `status`, `priority`, `searchString`. Returns `{ total, tickets }`. |
+| `POST` | `/ticket`             | Create a ticket. Body: `{ "newTicket": Ticket }`. Broadcasts `ticket_created` to WebSocket clients. |
+| `PUT`  | `/ticket/{ticket_id}` | Partially update a ticket. Send only the fields to change. |
+| `POST` | `/ticket/suggest`     | AI suggestion. Body: `{ title, description }`. Returns `{ category, tags, priority, suggested_response }`. |
+| `WS`   | `/ws/tickets`         | Pushes `{ type: "ticket_created", ticket }` messages. |
+
+`POST /ticket` and `PUT /ticket/{id}` include an artificial 0.8 s delay. It makes the optimistic UI and loading states visible during demos.
+
+## Data model
+
+```ts
+type Ticket = {
+  id: string;
+  title: string;
+  description: string;
+  status: "Open" | "In progress" | "Blocked" | "Resolved" | "Closed";
+  category: "Bug" | "Feature" | "Infrastructure" | "Enhancement" | "Design";
+  tags: string[];
+  priority: "Low" | "Medium" | "High" | "Urgent";
+  email: string;
+  department: string;
+  ai_response: string;
+};
+```
+
+The repo ships with a pre-populated `server/data/tickets.db`. To recreate it from scratch:
 
 ```sql
 CREATE TABLE tickets (
@@ -43,7 +115,7 @@ CREATE TABLE tickets (
   description TEXT NOT NULL,
   status TEXT NOT NULL,
   category TEXT NOT NULL,
-  tags TEXT NOT NULL,
+  tags TEXT NOT NULL,        -- JSON-encoded string array
   priority TEXT NOT NULL,
   email TEXT NOT NULL,
   department TEXT NOT NULL,
@@ -51,78 +123,28 @@ CREATE TABLE tickets (
 );
 ```
 
-## AI Behavior Explanation
+## Design decisions
 
-AI suggestions are **mocked** in the backend. The endpoint `POST /ticket/suggest` returns a canned response based on keywords in the title/description (e.g., vpn/login/email/slow/mobile/ui). If no keywords match, a random mock response is returned. This keeps the response shape stable while providing more variety.
+- **Filtering and pagination happen on the server**, so the UI never loads the whole table.
+- **Headless input components:** `InputWithAi` and `Modal` keep the AI-suggestion and modal behavior separate from their markup.
+- **`useTicketStatusUpdate` hook:** keeps the optimistic-update and rollback logic out of the dashboard component.
+- **WebSockets push new tickets.** The client checks each pushed ticket against its active filters and skips IDs it has already shown.
+- **Tags are a comma-separated string in the form** and a string array in the API. They're stored as a JSON string in SQLite.
 
-## Design Decisions & Known Limitations
+## Known limitations
 
-**Design decisions**
-- Ticket objects are intentionally limited to the fields below:
-  ```ts
-  export type Ticket = {
-    id: string;
-    title: string;
-    description: string;
-    status: TicketStatus;
-    category: TicketCategory;
-    tags: string[];
-    priority: TicketPriority;
-    email: string;
-    department: string;
-    ai_response: string;
-  };
+- AI-suggested **category and priority are random**. Only the resolution text and tags come from the model.
+- Tags are stored as a JSON string, not in a normalized table, so filtering by tag is a substring match.
+- Status updates aren't broadcast. Other clients see them only after their next fetch.
+- You can't edit an existing ticket's fields from the UI yet. Only status can change.
+- API and WebSocket URLs are hard-coded to `localhost:8000`.
 
-  export const STATUS_OPTIONS = [
-    "Open",
-    "In progress",
-    "Blocked",
-    "Resolved",
-    "Closed",
-  ] 
-
-  export const CATEGORY_OPTIONS = [
-    "Bug",
-    "Feature",
-    "Infrastructure",
-    "Enhancement",
-    "Design",
-  ]
-
-  export const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"]
-  ```
-- Tags are saved in the database as a array, but in the form creation are treated as a string separated by commas.
-- Tickes order from newest to oldest.
-- Headless component used for inputs with AI suggested fields and for new ticket form modal.
-- Hook used for ticket status update to keep UI dashboard component cleaner and focused on rendering.
-- Optimistic updates for ticket status changes, with toast feedback on success or failure.
-- Polling every 8 seconds to refresh tickets instead of WebSockets for simplicity.
-- Tailwind CSS utility-first styling for rapid UI iteration.
-- Pagination and filtering is done in the backend to improve performace if scalable 
-- OpenAi model is used to determine the solution suggestion and the tags for the mock IT ticket
-- Websocket added for a new ticket 
-
-
-**Known limitations**
-- Tags are stored as JSON strings in SQLite (not normalized).
-- The modal form can grow long; it is scrollable but still a single-page form.
-- A modal for editing existing tickets can be added as next steps.
-
-
-- Screen recording of functioning app included 
-## API Endpoints
-
-- `GET /tickets` Get all tickets
-- `POST /ticket` Create a ticket
-- `PUT /ticket/{ticket_id}` Update a ticket
-- `POST /ticket/suggest` Get AI suggestions
-
-## UI Scripts
+## UI scripts
 
 ```bash
-npm run dev
-npm run build
-npm run lint
-npm run format
-npm run preview
+npm run dev       # start Vite dev server
+npm run build     # type-check and build for production
+npm run preview   # preview the production build
+npm run lint      # ESLint
+npm run format    # Prettier
 ```
